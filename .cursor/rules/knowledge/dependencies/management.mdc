@@ -1,0 +1,9 @@
+---
+description: Criterios para el uso de dependencias externas
+alwaysApply: true
+---
+
+- Prioriza soluciones nativas de Node o TypeScript antes que nuevas dependencias.
+- Evalúa dependencias con métricas: mantenibilidad, tamaño, popularidad.
+- Usa dependencias auditadas y activamente mantenidas.
+- Limita dependencias de runtime, favorece devDependencies donde sea posible.

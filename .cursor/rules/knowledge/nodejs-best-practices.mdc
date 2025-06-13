@@ -1,0 +1,11 @@
+---
+description: Buenas prácticas en Node.js para proyectos backend
+globs: ["**/*.ts", "**/*.js"]
+alwaysApply: false
+---
+
+- Usa `async/await` en lugar de callbacks.
+- Maneja errores con bloques try/catch o middlewares centralizados.
+- Usa `dotenv` para variables de entorno.
+- Divide responsabilidades en controladores, servicios y módulos.
+- Usa herramientas como `eslint`, `prettier` y `husky`.

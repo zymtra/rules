@@ -1,0 +1,78 @@
+# Documentación de Código
+
+## Reglas Generales
+- Cada servicio debe tener un comentario de cabecera que explique su propósito y responsabilidades principales.
+- Las funciones públicas deben estar documentadas con JSDoc, incluyendo:
+  - Descripción de la función
+  - Parámetros (@param)
+  - Valor de retorno (@returns)
+  - Posibles excepciones (@throws)
+- Las funciones privadas complejas deben tener documentación inline explicando la lógica.
+- Los jobs y procesos batch deben documentar:
+  - Frecuencia de ejecución
+  - Propósito del job
+  - Pasos principales
+  - Manejo de errores
+  - Notificaciones
+
+## Formato de Documentación
+```typescript
+/**
+ * Descripción general del servicio/clase
+ * 
+ * Responsabilidades principales:
+ * 1. Responsabilidad 1
+ * 2. Responsabilidad 2
+ * 
+ * @example
+ * // Ejemplo de uso si es relevante
+ */
+
+/**
+ * Descripción de la función
+ * 
+ * @param {Type} paramName - Descripción del parámetro
+ * @returns {Type} Descripción del valor de retorno
+ * @throws {ErrorType} Descripción de cuándo se lanza el error
+ */
+```
+
+## Documentación de Jobs
+```typescript
+/**
+ * Nombre del Job
+ * 
+ * Frecuencia: [diario/semanal/mensual] a las [hora] [timezone]
+ * 
+ * Propósito:
+ * Descripción detallada del propósito del job
+ * 
+ * Pasos:
+ * 1. Paso 1
+ * 2. Paso 2
+ * 
+ * Manejo de Errores:
+ * - Qué hacer si falla
+ * - Notificaciones
+ * - Reintentos
+ */
+```
+
+## Documentación de Microservicios
+```typescript
+/**
+ * Nombre del Microservicio
+ * 
+ * Responsabilidades:
+ * 1. Responsabilidad principal
+ * 2. Otra responsabilidad
+ * 
+ * Dependencias:
+ * - Servicio 1: Propósito
+ * - Servicio 2: Propósito
+ * 
+ * Flujos Principales:
+ * 1. Flujo 1: Descripción
+ * 2. Flujo 2: Descripción
+ */
+``` 

@@ -1,0 +1,18 @@
+---
+description: Arquitectura recomendada para proyectos NestJS
+globs: ["**/*.ts"]
+alwaysApply: true
+---
+
+- Organiza el proyecto en módulos claramente separados por dominio.
+- Cada módulo debe tener: controller, service, dto, module, interfaces y testing.
+- Usa `@Injectable()` y `@Module()` correctamente para la inyección de dependencias.
+- Aplica `ValidationPipe` globalmente, usa DTOs con `class-validator`.
+- Los servicios no deben depender de la capa de presentación (controlador).
+
+## Acceso a Datos
+- Siempre acceder a los modelos de MongoDB a través de sus respectivos servicios.
+- No llamar directamente a los modelos desde fuera de sus servicios.
+- Los servicios encapsulan la lógica de negocio y el acceso a datos.
+- Ejemplo incorrecto: `userModel.find()` desde un controlador o script.
+- Ejemplo correcto: `usersService.findAll()` o `usersService.getActiveInvestorsUsers()`.

@@ -1,0 +1,10 @@
+---
+description: Patrones de diseño comunes y recomendados
+alwaysApply: true
+---
+
+- Usa Factory para instanciación compleja.
+- Singleton para servicios compartidos.
+- Strategy para lógica condicional intercambiable.
+- Adapter para integrar sistemas externos.
+- Usa ejemplos de código cuando sea útil.

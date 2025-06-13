@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+
+- Cobertura mínima del 80%.
+- Escribe unit tests para servicios y lógica de negocio.
+- Escribe e2e tests para flujos críticos de usuario.
+- Usa Jest con configuración global en `jest.config.ts`.
+- Evita testear lógica trivial como getters/setters.

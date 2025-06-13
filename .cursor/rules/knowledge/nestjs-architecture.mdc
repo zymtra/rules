@@ -1,0 +1,10 @@
+---
+description: Patrones de arquitectura recomendados en NestJS
+globs: ["**/*.ts"]
+alwaysApply: false
+---
+
+- Aplica el patrón de capas: controlador, servicio, repositorio.
+- Usa DTOs para validación con `class-validator`.
+- Implementa guards y pipes para autorización y transformación de datos.
+- Modulariza cada dominio en su carpeta (`auth`, `users`, etc.).

@@ -1,0 +1,9 @@
+---
+description: Convenciones de nomenclatura profesionales
+alwaysApply: true
+---
+
+- Usa camelCase para variables y funciones.
+- Usa PascalCase para clases, interfaces, DTOs y enums.
+- Usa snake_case para nombres de archivos y variables de entorno.
+- No uses abreviaciones crípticas; prioriza legibilidad.

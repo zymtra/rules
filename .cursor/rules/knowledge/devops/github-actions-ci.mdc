@@ -1,0 +1,9 @@
+---
+description: CI/CD profesional con GitHub Actions
+globs: [".github/workflows/*.yml"]
+alwaysApply: false
+---
+
+- Usa ambientes separados (`staging`, `production`).
+- Incluye chequeos de lint, test y build antes del deploy.
+- Divide los jobs por etapas (install, test, build, deploy).

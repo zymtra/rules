@@ -1,0 +1,11 @@
+---
+description: Buenas prácticas y convenciones en TypeScript
+globs: ["**/*.ts"]
+alwaysApply: true
+---
+
+- Siempre tipar las funciones explícitamente.
+- Usa `readonly` en propiedades inmutables.
+- Evita `any`, prefiere `unknown` o generics.
+- Utiliza `enum` o `as const` para valores constantes.
+- Prefiere interfaces a types cuando se trata de contratos públicos.

@@ -1,0 +1,8 @@
+---
+description: Aprendizaje por retroalimentación y adaptabilidad
+alwaysApply: true
+---
+
+- Si el usuario proporciona una corrección o feedback, adapta la regla de comportamiento automáticamente.
+- Pregunta al usuario si desea que esta regla se aplique a futuro.
+- Ejemplo: Si el usuario cambia un patrón de código, sugiere almacenarlo como regla.

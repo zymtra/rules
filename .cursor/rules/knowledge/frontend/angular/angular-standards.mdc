@@ -1,0 +1,140 @@
+---
+description: Only in the angular context
+alwaysApply: false
+---
+# Angular Project Coding Standards (cursorrules)
+
+## 1. Estructura y Organización
+- Mantén una estructura modular y clara: separa componentes, servicios, modelos, helpers y constantes.
+- Usa directorios `shared/` para componentes reutilizables y utilidades.
+- Prefiere componentes standalone cuando sea posible. Salvo un caso donde detectes que estoy dentro de un NgModules no ofrezcas soluciones con NgModule.
+- Cada componente debe tener su propio archivo de estilos y template.
+
+## 2. Buenas Prácticas en Vistas (Templates)
+- Usa el sistema de templates Angular (`*ngIf`, `*ngFor`, `@for`, `@if`, etc.) de forma clara y legible.
+- Evita lógica compleja en los templates; trasládala al TypeScript del componente.
+- Usa componentes pequeños y reutilizables para listas, formularios y bloques de UI.
+- Prefiere el uso de pipes para formateo de datos en la vista.
+- Usa clases utilitarias (como Tailwind o similares) para estilos rápidos, pero centraliza estilos comunes en archivos SCSS.
+- Usa `trackBy` en bucles para mejorar el rendimiento.
+- Usa `@Input` y `@Output` para la comunicación entre componentes.
+- Mantén los templates limpios: evita el uso excesivo de lógica inline.
+
+## 3. Uso de Signals y Estado Reactivo
+- Usa signals (`signal`, `computed`, `toSignal`) para manejar estado reactivo local en componentes y servicios.
+- Prefiere signals sobre `BehaviorSubject` para estado local simple.
+- Expón signals como `readonly` cuando no deban ser modificados externamente.
+- Usa `computed` para derivar valores a partir de otros signals.
+- Para streams de RxJS que se usan en la vista, considera convertirlos a signals con `toSignal`.
+- Evita mezclar signals y observables sin una razón clara.
+- Usa signals para loading, errores y estado de UI en componentes.
+
+## 4. Construcción y Consumo de Endpoints
+- Centraliza el acceso a endpoints en servicios bajo `core/api/`.
+- Usa un servicio base (`ApiClientService`) para peticiones HTTP.
+- Define métodos claros y tipados para cada endpoint (get, post, put, patch, delete).
+- Normaliza las respuestas de la API antes de exponerlas a los componentes.
+- No pongas lógica de negocio en los servicios de API, solo transformación de datos.
+- Usa interfaces y normalizadores para tipar y transformar datos.
+- Maneja errores de red y muestra mensajes claros al usuario.
+- Usa parámetros tipados y claros en los métodos de los servicios.
+
+## 5. Componentes y Reutilización
+- Prefiere componentes pequeños, enfocados y reutilizables.
+- Usa `@Input` para recibir datos y `@Output` para emitir eventos.
+- Usa servicios para lógica compartida y estado global.
+- Usa módulos compartidos para importar dependencias comunes (Material, Forms, etc.).
+- Documenta los componentes y servicios con comentarios claros.
+
+## 6. Accesibilidad y UX
+- Usa etiquetas semánticas y roles ARIA cuando sea necesario.
+- Asegúrate de que los componentes sean navegables por teclado.
+- Usa feedback visual para loading, errores y acciones exitosas.
+- Usa placeholders de imagen: https://placehold.co/600x400
+
+## 7. Interfaces y Normalizadores
+
+### Estructura y Nomenclatura
+- Usa archivos separados: `xxx.interface.ts` y `xxx.normalizer.ts`
+- Nomenclatura consistente:
+  - Interfaces de API: `IApiXXX` (datos sin procesar del backend)
+  - Interfaces normalizadas: `IXXX` (datos procesados para el frontend)
+  - Listas: `IXXXList` con estructura `{ total: number; items: IXXX[] }`
+  - Listas API: `IApiXXXList` con estructura `{ total: number; data: IApiXXX[] }`
+
+### Organización de Propiedades
+- **OBLIGATORIO**: Ordena todas las propiedades alfabéticamente en las interfaces
+- Agrupa imports relacionados y ordénalos alfabéticamente
+- Coloca las interfaces en este orden: `IApiXXX`, `IXXX`, `IApiXXXList`, `IXXXList`
+
+### Tipado Estricto
+- Evita usar `any` - define tipos específicos siempre que sea posible
+- Usa tipos union para valores específicos (ej: `status: 'active' | 'inactive'`)
+- Define interfaces anidadas cuando sea necesario en lugar de usar `any`
+- Usa arrays tipados: `IListItem[]` en lugar de `any[]`
+
+### Normalizadores
+- Funciones deben llamarse `normalizeXXX` y `normalizeXXXList`
+- Transforma fechas de string a Date usando helpers como `toDateFromUtcString`
+- Agrega propiedades computadas en la normalización (ej: `full_name`, `is_active`)
+- Usa transformaciones consistentes para URLs de archivos
+- Maneja valores null/undefined de forma explícita
+
+### Imports y Dependencias
+- Importa solo las interfaces necesarias
+- Usa paths absolutos con alias `@app/`
+- Agrupa imports por origen: angular core, shared models, api interfaces
+- Ordena imports alfabéticamente dentro de cada grupo
+
+### Documentación
+- Usa comentarios JSDoc para interfaces complejas
+- Marca interfaces deprecadas con `@deprecated`
+- Agrega TODO comments for mejoras futuras con tipos específicos
+
+### Ejemplos:
+```typescript
+// ✅ Correcto
+export interface IApiUser {
+  address: string;
+  bio: string;
+  city: string;
+  created_at: string;
+  email: string;
+  first_name: string;
+  id: number;
+  status: 'active' | 'inactive' | 'pending';
+}
+
+export interface IUser {
+  address: string;
+  bio: string;
+  city: string;
+  created_at: string;
+  email: string;
+  first_name: string;
+  full_name: string; // Computed property
+  id: number;
+  is_active: boolean; // Computed from status
+  status: 'active' | 'inactive' | 'pending';
+}
+
+// ❌ Incorrecto
+export interface IApiUser {
+  id: number;
+  status: any; // Usar tipo específico
+  bio: string;
+  address: string; // No está ordenado alfabéticamente
+  created_at: string;
+}
+```
+
+## 8. Sugerencias Generales
+- Escribe código legible y autoexplicativo.
+
+---
+
+# Sugerencias adicionales para el equipo
+- Revisa los ejemplos de `shared/components` para patrones de componentes reutilizables.
+- Consulta los servicios en `core/api/` para ver ejemplos de endpoints bien estructurados.
+- Usa signals para loading y estado de UI en todos los componentes nuevos.
+- Si tienes dudas, pregunta y documenta las decisiones en este archivo. 

@@ -1,0 +1,135 @@
+# Git Workflow y Comandos de Línea - Reglas de Seguridad
+
+## 🚨 REGLAS PRINCIPALES: NO OPERACIONES SIN AUTORIZACIÓN
+
+### Operaciones PROHIBIDAS sin autorización explícita:
+
+#### Git Operations:
+- ❌ `git commit`, `git push`, `git pull`
+- ❌ `git merge`, `git rebase`, `git checkout` (cambiar ramas)
+- ❌ `git branch` (crear/eliminar), `git reset`, `git revert`
+- ❌ Cualquier operación que modifique el historial o estado del repositorio
+
+#### Dependencias:
+- ❌ `npm install` (instalar nuevas dependencias)
+- ❌ `npm uninstall` (eliminar dependencias)
+- ❌ `npm update` (actualizar dependencias)
+- ❌ Modificar `package.json` o `package-lock.json`
+
+### Operaciones PERMITIDAS:
+- ✅ `git status`, `git log`, `git diff`, `git show`
+- ✅ `git branch` (solo listar), `git remote -v`
+- ✅ `npm run [script]` (ejecutar scripts existentes)
+- ✅ Comandos de solo lectura y desarrollo
+
+---
+
+## 📋 Protocolo de Autorización
+
+### Solicitar Autorización:
+```
+SOLICITUD DE AUTORIZACIÓN
+
+Operación: [git commit/push/pull/npm install/etc.]
+Rama: [nombre de la rama]
+Descripción: [qué cambios se harán]
+Razón: [por qué es necesario]
+Impacto: [impacto en el proyecto]
+
+¿Autorizas esta operación?
+```
+
+### Ejemplo:
+```
+SOLICITUD DE AUTORIZACIÓN
+
+Operación: npm install @angular/material
+Rama: feature/ui-components
+Descripción: Instalar Angular Material para componentes UI
+Razón: Necesario para implementar nuevos componentes de interfaz
+Impacto: Agregará ~2MB al bundle, mejora UX
+
+¿Autorizas esta instalación?
+```
+
+---
+
+## 🔧 Comandos Seguros para Desarrollo
+
+### Git (Solo Lectura):
+```bash
+git status                    # Ver estado actual
+git log --oneline -10        # Ver historial reciente
+git diff                     # Ver cambios actuales
+git diff --staged           # Ver cambios staged
+git show <commit-hash>      # Ver commit específico
+git branch -a               # Ver todas las ramas
+git remote -v               # Ver remotes configurados
+```
+
+### Desarrollo (Sin Modificar Dependencias):
+```bash
+npm run start               # Iniciar servidor de desarrollo
+npm run build              # Build de desarrollo
+npm run build:prod         # Build de producción
+ionic build --prod         # Build Ionic de producción
+npm run test               # Ejecutar tests
+npm run lint               # Linting
+npm run lint:fix           # Linting con auto-fix
+```
+
+---
+
+## 🚫 Comandos Prohibidos
+
+### Git (Requieren Autorización):
+```bash
+# ❌ NO EJECUTAR SIN AUTORIZACIÓN
+git commit -m "message"
+git push origin main
+git pull origin develop
+git merge feature-branch
+git rebase main
+git checkout -b new-branch
+git reset --hard HEAD~1
+```
+
+### Dependencias (Requieren Autorización):
+```bash
+# ❌ NO EJECUTAR SIN AUTORIZACIÓN
+npm install package-name
+npm uninstall package-name
+npm update
+npm install --save-dev package-name
+npm install --save package-name
+```
+
+### Operaciones Peligrosas:
+```bash
+# ❌ NUNCA EJECUTAR
+git push --force
+git reset --hard
+rm -rf node_modules
+rm -rf .git
+```
+
+---
+
+## ✅ Checklist de Seguridad
+
+### Antes de Cualquier Operación:
+- [ ] Verificar estado actual (`git status`)
+- [ ] Documentar cambios propuestos
+- [ ] Solicitar autorización explícita
+- [ ] Esperar confirmación
+- [ ] Verificar impacto en el proyecto
+
+### Durante el Desarrollo:
+- [ ] Usar solo comandos de lectura
+- [ ] Documentar cambios realizados
+- [ ] Mantener comunicación clara
+- [ ] No asumir permisos
+
+---
+
+*Esta regla asegura que todas las operaciones Git y de dependencias sean seguras y autorizadas, manteniendo la integridad del proyecto.*

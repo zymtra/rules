@@ -1,0 +1,683 @@
+# Ionic Angular - Guía de Buenas Prácticas
+
+## 🏗️ Arquitectura Ionic
+
+### Estructura de Directorios para Ionic
+- Mantén una estructura modular: `core/`, `shared/`, `features/`, `layout/`
+- Usa `core/` para servicios singleton, guards, interceptors
+- Usa `shared/` para componentes, pipes, directivas reutilizables
+- Usa `features/` para módulos de características específicas
+
+### Configuración Ionic
+```typescript
+// main.ts - Configuración Ionic
+bootstrapApplication(AppComponent, {
+  providers: [
+    { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    provideIonicAngular({
+      mode: 'md', // o 'ios' según el diseño
+      _forceStatusbarPadding: true
+    }),
+    provideRouter(routes),
+  ],
+});
+```
+
+---
+
+## 🧩 Componentes y Páginas Ionic
+
+### Estructura de Página Ionic
+```typescript
+@Component({
+  selector: 'app-example',
+  templateUrl: './example.page.html',
+  styleUrls: ['./example.page.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    IonicModule,
+    // Solo importa lo que necesites
+  ]
+})
+export class ExamplePage implements OnInit, OnDestroy {
+  // Signals para estado reactivo
+  public loading = signal(false);
+  public data = signal<any[]>([]);
+  
+  // Observables para streams de datos
+  public data$ = new Observable<any[]>();
+  
+  // Destructor para limpiar suscripciones
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private apiService: ApiService,
+    private utilsService: UtilsService,
+    private navCtrl: NavController
+  ) {}
+
+  ngOnInit() {
+    this.initStreams();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // Lifecycle hooks específicos de Ionic
+  ionViewWillEnter() {
+    // Se ejecuta antes de que la vista se active
+    this.loadData();
+  }
+
+  ionViewDidEnter() {
+    // Se ejecuta después de que la vista se active
+    this.analytics.trackPageView();
+  }
+
+  ionViewWillLeave() {
+    // Se ejecuta antes de que la vista se desactive
+    this.saveState();
+  }
+
+  private initStreams() {
+    this.data$ = this.apiService.getData().pipe(
+      takeUntil(this.destroy$)
+    );
+  }
+}
+```
+
+### Template de Página Ionic
+```html
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>{{ pageTitle }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="onAction()">
+        <ion-icon name="add"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">{{ pageTitle }}</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <!-- Loading State -->
+  <ion-spinner *ngIf="loading()" name="crescent"></ion-spinner>
+
+  <!-- Content -->
+  <ion-list *ngIf="!loading() && data().length > 0">
+    <ion-item *ngFor="let item of data(); trackBy: trackByFn" (click)="onItemClick(item)">
+      <ion-thumbnail slot="start">
+        <ion-img [src]="item.image" loading="lazy"></ion-img>
+      </ion-thumbnail>
+      <ion-label>
+        <h2>{{ item.title }}</h2>
+        <p>{{ item.description }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <!-- Empty State -->
+  <ion-card *ngIf="!loading() && data().length === 0">
+    <ion-card-content class="ion-text-center">
+      <ion-icon name="document-outline" size="large"></ion-icon>
+      <h2>No hay datos disponibles</h2>
+      <p>No se encontraron elementos para mostrar</p>
+    </ion-card-content>
+  </ion-card>
+</ion-content>
+```
+
+### Buenas Prácticas de Componentes Ionic
+- **Usar componentes Ionic nativos**: `ion-button`, `ion-card`, `ion-list`, etc.
+- **Responsive design**: Usar `ion-grid` y `ion-col` con breakpoints
+- **Loading states**: Siempre mostrar estados de carga
+- **Error handling**: Manejar errores con `ion-alert` o `ion-toast`
+
+---
+
+## 🧭 Navegación Ionic
+
+### Ionic Navigation Service
+```typescript
+@Injectable({
+  providedIn: 'root'
+})
+export class NavigationService {
+  constructor(private navCtrl: NavController) {}
+
+  // Navegación programática
+  navigateToPage(route: string, params?: any) {
+    this.navCtrl.navigateForward([route], { queryParams: params });
+  }
+
+  // Navegación con parámetros
+  navigateWithParams(route: string, id: string) {
+    this.navCtrl.navigateForward([route, id]);
+  }
+
+  // Navegación con modal
+  async openModal(component: any, componentProps?: any) {
+    const modal = await this.modalCtrl.create({
+      component,
+      componentProps,
+      cssClass: 'my-custom-modal'
+    });
+    return modal.present();
+  }
+
+  // Navegación con tabs
+  navigateToTab(tab: string) {
+    this.navCtrl.navigateRoot(['/tabs', tab]);
+  }
+}
+```
+
+### Route Guards para Ionic
+```typescript
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthGuard implements CanActivate {
+  constructor(
+    private authService: AuthService, 
+    private navCtrl: NavController
+  ) {}
+
+  canActivate(): Observable<boolean> {
+    return this.authService.isLoggedIn$.pipe(
+      map(isLoggedIn => {
+        if (!isLoggedIn) {
+          this.navCtrl.navigateRoot('/login');
+          return false;
+        }
+        return true;
+      })
+    );
+  }
+}
+```
+
+### Deep Linking Configuration
+```typescript
+// En app.routes.ts
+const routes: Routes = [
+  {
+    path: 'catalog/:companySlug/:branchSlug',
+    component: CatalogComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'article/:id',
+    component: ArticleComponent
+  }
+];
+```
+
+---
+
+## ⚡ Performance y Optimización
+
+### Lazy Loading para Ionic
+```typescript
+// En app.routes.ts
+const routes: Routes = [
+  {
+    path: 'catalog',
+    loadChildren: () => import('./catalog/catalog.routes').then(m => m.CATALOG_ROUTES)
+  },
+  {
+    path: 'admin',
+    loadChildren: () => import('./admin/admin.routes').then(m => m.ADMIN_ROUTES),
+    canActivate: [AdminGuard]
+  }
+];
+```
+
+### Virtual Scrolling para Listas Largas
+```html
+<ion-virtual-scroll [items]="items" approxItemHeight="80px">
+  <ion-item *virtualItem="let item; let itemBounds = bounds">
+    <ion-thumbnail slot="start">
+      <ion-img [src]="item.image"></ion-img>
+    </ion-thumbnail>
+    <ion-label>
+      <h2>{{ item.title }}</h2>
+      <p>{{ item.description }}</p>
+    </ion-label>
+  </ion-item>
+</ion-virtual-scroll>
+```
+
+### Image Optimization
+```html
+<!-- Lazy loading de imágenes -->
+<ion-img 
+  [src]="imageUrl" 
+  loading="lazy"
+  [alt]="imageAlt"
+  appImageFallback>
+</ion-img>
+
+<!-- Placeholder images -->
+<img [src]="getPlaceholderImage(600, 400)" alt="Placeholder">
+```
+
+### Signals vs Observables en Ionic
+```typescript
+// ✅ Para estado local simple
+public loading = signal(false);
+public count = computed(() => this.items().length);
+
+// ✅ Para streams de datos externos
+public data$ = this.apiService.getData();
+
+// ✅ Convertir Observable a Signal
+public data = toSignal(this.apiService.getData());
+```
+
+### Zone.js Optimization para Ionic
+```typescript
+// En zone-flags.ts
+(window as any).__Zone_disable_customElements = true;
+(window as any).__Zone_disable_requestAnimationFrame = true;
+(window as any).__Zone_disable_on_property = true;
+```
+
+---
+
+## 🎨 UI/UX Ionic
+
+### Ionic Components Best Practices
+```html
+<!-- Loading States -->
+<ion-content>
+  <ion-spinner *ngIf="loading()" name="crescent"></ion-spinner>
+  
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+  
+  <ion-infinite-scroll (ionInfinite)="loadMore($event)">
+    <ion-infinite-scroll-content></ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+</ion-content>
+```
+
+### Responsive Design con Ionic
+```scss
+// En variables.scss
+:root {
+  --ion-grid-columns: 12;
+  --ion-grid-column-padding: 16px;
+}
+
+// Media queries para diferentes tamaños
+@media (min-width: 768px) {
+  .ion-col {
+    --ion-grid-column-padding: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ion-col {
+    --ion-grid-column-padding: 32px;
+  }
+}
+```
+
+### Ionic Theming
+```scss
+// En variables.scss
+:root {
+  --ion-color-primary: #3880ff;
+  --ion-color-primary-rgb: 56, 128, 255;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #3171e0;
+  --ion-color-primary-tint: #4c8dff;
+}
+
+// Dark mode
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ion-color-primary: #428cff;
+    --ion-color-primary-rgb: 66, 140, 255;
+    --ion-color-primary-contrast: #000000;
+    --ion-color-primary-contrast-rgb: 0, 0, 0;
+    --ion-color-primary-shade: #3a7be0;
+    --ion-color-primary-tint: #5598ff;
+  }
+}
+```
+
+### Accessibility en Ionic
+```html
+<!-- ARIA labels -->
+<ion-button 
+  [attr.aria-label]="'Editar ' + item.name"
+  (click)="editItem(item)">
+  <ion-icon name="create"></ion-icon>
+</ion-button>
+
+<!-- Semantic HTML -->
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Página Principal</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<!-- Focus management -->
+<ion-button (click)="nextStep()" #nextButton>
+  Siguiente
+</ion-button>
+```
+
+---
+
+## 📱 Mobile-First Design
+
+### Touch Interactions
+```html
+<!-- Botones con tamaño mínimo para touch -->
+<ion-button size="large" (click)="onAction()">
+  Acción Principal
+</ion-button>
+
+<!-- Swipe gestures -->
+<ion-item-sliding>
+  <ion-item>
+    <ion-label>{{ item.title }}</ion-label>
+  </ion-item>
+  <ion-item-options side="end">
+    <ion-item-option color="danger" (click)="deleteItem(item)">
+      <ion-icon name="trash"></ion-icon>
+    </ion-item-option>
+  </ion-item-options>
+</ion-item-sliding>
+```
+
+### Mobile-Specific Features
+```typescript
+// Haptic feedback
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
+
+async triggerHaptic() {
+  await Haptics.impact({ style: ImpactStyle.Medium });
+}
+
+// Status bar
+import { StatusBar, Style } from '@capacitor/status-bar';
+
+async setStatusBar() {
+  await StatusBar.setStyle({ style: Style.Dark });
+  await StatusBar.setBackgroundColor({ color: '#3880ff' });
+}
+```
+
+### Responsive Breakpoints
+```scss
+// Breakpoints específicos para mobile
+$breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px
+);
+
+@mixin respond-to($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media (min-width: map-get($breakpoints, $breakpoint)) {
+      @content;
+    }
+  }
+}
+```
+
+---
+
+## 🔧 PWA y Capacitor
+
+### PWA Configuration
+```typescript
+// En main.ts
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+
+// Service Worker para cache
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open('v1').then((cache) => {
+      return cache.addAll([
+        '/',
+        '/assets/icon/favicon.png',
+        '/assets/imgs/logo.webp'
+      ]);
+    })
+  );
+});
+```
+
+### Capacitor Configuration
+```typescript
+// capacitor.config.ts
+import { CapacitorConfig } from '@capacitor/cli';
+
+const config: CapacitorConfig = {
+  appId: 'com.example.app',
+  appName: 'My Ionic App',
+  webDir: 'www',
+  server: {
+    androidScheme: 'https'
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 3000,
+      backgroundColor: '#3880ff'
+    }
+  }
+};
+
+export default config;
+```
+
+### Native Features
+```typescript
+// Camera
+import { Camera, CameraResultType } from '@capacitor/camera';
+
+async takePicture() {
+  const image = await Camera.getPhoto({
+    quality: 90,
+    allowEditing: true,
+    resultType: CameraResultType.Uri
+  });
+}
+
+// Geolocation
+import { Geolocation } from '@capacitor/geolocation';
+
+async getCurrentPosition() {
+  const position = await Geolocation.getCurrentPosition();
+  return position;
+}
+```
+
+---
+
+## 🧪 Testing Ionic
+
+### Unit Testing Ionic Components
+```typescript
+describe('ExamplePage', () => {
+  let component: ExamplePage;
+  let fixture: ComponentFixture<ExamplePage>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [ExamplePage],
+      providers: [
+        { provide: ApiService, useValue: mockApiService },
+        { provide: NavController, useValue: mockNavController }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(ExamplePage);
+    component = fixture.componentInstance;
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should load data on ionViewWillEnter', () => {
+    spyOn(component, 'loadData');
+    component.ionViewWillEnter();
+    expect(component.loadData).toHaveBeenCalled();
+  });
+});
+```
+
+### E2E Testing con Ionic
+```typescript
+describe('App Flow', () => {
+  it('should navigate through main features', async () => {
+    await page.goto('/');
+    await page.click('ion-menu-button');
+    await page.click('[data-testid="catalog-menu-item"]');
+    await expect(page.locator('ion-title')).toContainText('Catálogo');
+  });
+});
+```
+
+### Testing Ionic Components
+```typescript
+// Testing ion-alert
+it('should show alert on error', async () => {
+  const alertController = TestBed.inject(AlertController);
+  spyOn(alertController, 'create').and.returnValue(
+    Promise.resolve({
+      present: () => Promise.resolve(),
+      onDidDismiss: () => Promise.resolve({ data: { role: 'confirm' } })
+    } as any)
+  );
+
+  await component.showErrorAlert('Error message');
+  expect(alertController.create).toHaveBeenCalled();
+});
+```
+
+---
+
+## 📊 Performance Monitoring
+
+### Lighthouse Performance
+```bash
+# Build de producción (sin sitemap para pruebas)
+ionic build --prod
+
+# Servir build
+npx http-server www -p 8080
+
+# Medir performance
+npx lighthouse http://localhost:8080 --only-categories=performance --chrome-flags="--headless"
+```
+
+### Bundle Analysis
+```bash
+# Analizar bundle size
+ionic build --prod --stats-json
+npx webpack-bundle-analyzer dist/app/stats.json
+```
+
+### Performance Metrics
+```typescript
+// Core Web Vitals tracking
+import { AnalyticsService } from './core/analytics.service';
+
+constructor(private analytics: AnalyticsService) {}
+
+trackPerformance() {
+  // LCP (Largest Contentful Paint)
+  new PerformanceObserver((entryList) => {
+    const entries = entryList.getEntries();
+    const lastEntry = entries[entries.length - 1];
+    this.analytics.track('lcp', lastEntry.startTime);
+  }).observe({ entryTypes: ['largest-contentful-paint'] });
+
+  // FID (First Input Delay)
+  new PerformanceObserver((entryList) => {
+    const entries = entryList.getEntries();
+    entries.forEach((entry) => {
+      this.analytics.track('fid', entry.processingStart - entry.startTime);
+    });
+  }).observe({ entryTypes: ['first-input'] });
+}
+```
+
+---
+
+## 🎯 Checklist de Implementación Ionic
+
+### Antes de Deploy
+- [ ] Lazy loading implementado
+- [ ] Images optimizadas con lazy loading
+- [ ] Bundle size analizado
+- [ ] Performance auditado con Lighthouse
+- [ ] Tests pasando
+- [ ] Error handling implementado
+- [ ] Accessibility auditado
+- [ ] Responsive design verificado
+- [ ] Mobile gestures implementados
+- [ ] PWA features configuradas
+- [ ] Capacitor configurado (si aplica)
+
+### Mantenimiento
+- [ ] Dependencias actualizadas regularmente
+- [ ] Performance monitoreada
+- [ ] Error logs revisados
+- [ ] User feedback recopilado
+- [ ] Security patches aplicados
+- [ ] Service Worker cache actualizado
+
+---
+
+## 📚 Recursos Específicos de Ionic
+
+### Documentación Oficial
+- [Ionic Framework Documentation](https://ionicframework.com/docs)
+- [Ionic Angular Documentation](https://ionicframework.com/docs/angular/overview)
+- [Ionic Components](https://ionicframework.com/docs/components)
+
+### Herramientas Recomendadas
+- **Ionic CLI**: `npm install -g @ionic/cli`
+- **Capacitor**: `npm install @capacitor/core @capacitor/cli`
+- **Ionic DevTools**: Extensión de Chrome para debugging
+- **Ionic Lab**: Para testing en diferentes plataformas
+
+### Comunidad
+- [Ionic Forum](https://forum.ionicframework.com/)
+- [Ionic Discord](https://discord.gg/ionic)
+- [Stack Overflow - Ionic](https://stackoverflow.com/questions/tagged/ionic-framework)
+
+---
+
+*Esta guía está específicamente diseñada para proyectos Ionic con Angular, incorporando las mejores prácticas del framework y la comunidad.*
+description:
+globs:
+alwaysApply: false
+---
